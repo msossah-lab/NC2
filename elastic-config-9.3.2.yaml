@@ -1,0 +1,100 @@
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: elasticsearch-cluster
+  namespace: production
+spec:
+  version: 9.3.2
+  monitoring:
+    metrics:
+      elasticsearchRefs:
+        - name: monitoring-cluster
+          namespace: observability
+    logs:
+      elasticsearchRefs:
+        - name: monitoring-cluster
+          namespace: observability
+  http:
+    service:
+      spec:
+        type: ClusterIP
+        ports:
+        - name: https
+          port: 9200
+          targetPort: 9200
+          protocol: TCP
+  nodeSets:
+  - name: master
+    count: 1
+    config:
+      node.roles: ["master","voting_only"]
+      xpack.ml.enabled: true
+      node.store.allow_mmap: false
+    volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 50Gi
+        storageClassName: disk-hot
+    podTemplate:
+      metadata:
+        labels:
+          key: prod
+      spec:
+        containers:
+        - name: elasticsearch
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
+          resources:
+            requests:
+              memory: 1Gi
+              cpu: 1
+            limits:
+              memory: 1Gi
+              cpu: 1
+  - name: data-hot
+    count: 2
+    config:
+      node.roles: ["data_hot","master","ingest","data_content","remote_cluster_client"]
+      node.store.allow_mmap: false
+    volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 550Gi
+        storageClassName: disk-hot
+    - metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 550Gi
+        storageClassName: disk-hot
+    podTemplate:
+      metadata:
+        labels:
+          key: prod
+      spec:
+        containers:
+        - name: elasticsearch
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
+          resources:
+            requests:
+              memory: 8Gi
+              cpu: 2
+            limits:
+              memory: 8Gi
+              cpu: 2
