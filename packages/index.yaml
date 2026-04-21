@@ -3,23 +3,23 @@ entries:
   elastic:
   - apiVersion: v2
     appVersion: 9.3.2
-    created: "2026-04-21T12:09:19.09618-04:00"
+    created: "2026-04-21T12:29:00.757034-04:00"
     description: ECK Elasticsearch cluster chart for NC2 environments.
     digest: 63ab1b6b3b9a2d834441e1cb81948d516bb5e3d9ff1a6d350219cdb23cf98c99
     name: elastic
     type: application
     urls:
-    - https://raw.githubusercontent.com/msossah-lab/NC2/main/packages/elastic-0.1.0.tgz
+    - elastic-0.1.0.tgz
     version: 0.1.0
   kibana:
   - apiVersion: v2
     appVersion: 9.3.2
-    created: "2026-04-21T12:09:19.096459-04:00"
+    created: "2026-04-21T12:29:00.757421-04:00"
     description: ECK Kibana and Elastic Agent chart for NC2 environments.
     digest: eb52b530e6a20573535426b09cd9d908a971892feac7fffec51a6f0fc0afa45b
     name: kibana
     type: application
     urls:
-    - https://raw.githubusercontent.com/msossah-lab/NC2/main/packages/kibana-0.1.0.tgz
+    - kibana-0.1.0.tgz
     version: 0.1.0
-generated: "2026-04-21T12:09:19.095832-04:00"
+generated: "2026-04-21T12:29:00.754832-04:00"

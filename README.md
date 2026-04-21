@@ -17,12 +17,20 @@ This repository is structured as a Helm charts source that can be consumed direc
 
 ## Rancher Setup
 
-Add this chart repository in Rancher under **Apps -> Repositories** using:
+Use one of the following repository targets in Rancher (**Apps -> Repositories**):
 
-- Repository URL: `https://raw.githubusercontent.com/msossah-lab/NC2/main/packages/index.yaml`
-- Type: Helm
+- Git target (recommended when only `github.com` is allowed):
+  - Type: Git repository containing Helm charts
+  - URL: `https://github.com/msossah-lab/NC2`
+  - Branch: `main`
+- HTTP Helm target (when raw/static hosting is reachable):
+  - Type: HTTP(s) URL to Helm index
+  - URL: `https://raw.githubusercontent.com/msossah-lab/NC2/main/packages/index.yaml`
 
-Rancher will read `packages/index.yaml` and list available chart versions.
+Notes:
+
+- `packages/index.yaml` now uses relative chart archive URLs, which works well for Git-based repository consumption.
+- If HTTP mode is used, ensure Rancher can reach the chart archive URLs referenced by `index.yaml`.
 
 ## Owned Charts
 
@@ -72,5 +80,6 @@ For the external SigNoz VM + in-cluster collector deployment model, follow:
    - `helm package charts/kibana -d packages/`
    - `helm package charts/elastic -d packages/`
 5. Rebuild index:
-   - `helm repo index packages/ --url https://raw.githubusercontent.com/msossah-lab/NC2/main/packages`
+   - `helm repo index packages/`
+   - Optional for HTTP-hosted repo mode: `helm repo index packages/ --url <public-packages-base-url>`
 6. Commit and push changes, including updated files in `packages/`
