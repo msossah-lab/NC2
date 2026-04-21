@@ -1,0 +1,108 @@
+# -- Override the chart name.
+nameOverride: ""
+# -- Override the full resource name.
+fullnameOverride: ""
+
+kibana:
+  image:
+    # -- Kibana container image repository used by ECK.
+    repository: docker.elastic.co/kibana/kibana
+    # -- Kibana version and image tag.
+    tag: "9.3.2"
+  # -- Number of Kibana pods.
+  replicaCount: 1
+  service:
+    # -- Service type for the Kibana HTTP endpoint.
+    type: ClusterIP
+    # -- Service port exposed by Kibana.
+    port: 5601
+    # -- Target port exposed by the Kibana container.
+    targetPort: 5601
+    # -- Service protocol for Kibana endpoint.
+    protocol: TCP
+    # -- Named service port.
+    name: https
+  # -- Existing Elasticsearch resource name in the cluster.
+  elasticsearchRefName: elasticsearch-cluster
+  resources:
+    requests:
+      cpu: "1"
+      memory: 2Gi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+  # -- Extra environment variables added to the Kibana container.
+  env: []
+
+fleet:
+  # -- Set to false to skip deployment of Fleet Server and Elastic Agent resources.
+  enabled: true
+  agentImage:
+    # -- Elastic Agent image repository used for Fleet Server and Elastic Agent.
+    repository: docker.elastic.co/beats/elastic-agent
+    # -- Elastic Agent image tag.
+    tag: "9.3.2"
+  fleetServer:
+    # -- Number of Fleet Server replicas.
+    replicaCount: 1
+    # -- Fleet policy ID assigned to Fleet Server.
+    policyId: eck-fleet-server
+    securityContext:
+      runAsUser: 0
+  elasticAgent:
+    # -- Fleet policy ID assigned to Elastic Agent daemonset.
+    policyId: eck-agent
+    securityContext:
+      runAsUser: 0
+    # -- Extra volumes for Elastic Agent daemonset.
+    volumes:
+      - name: agent-data
+        emptyDir: {}
+
+config:
+  # -- Disable SSL verification for Elasticsearch endpoint.
+  elasticsearchSslVerificationMode: none
+  # -- Fleet package versions to install in Kibana.
+  fleetPackages:
+    - name: system
+      version: latest
+    - name: elastic_agent
+      version: latest
+    - name: fleet_server
+      version: latest
+    - name: kubernetes
+      version: latest
+  # -- Fleet server policy metadata.
+  fleetServerPolicy:
+    name: Fleet Server on ECK policy
+    id: eck-fleet-server
+    isManaged: true
+    monitoringEnabled:
+      - logs
+      - metrics
+    unenrollTimeout: 900
+    isDefaultFleetServer: true
+    packagePolicies:
+      - name: fleet_server-1
+        id: fleet_server-1
+        package:
+          name: fleet_server
+  # -- Elastic Agent policy metadata.
+  elasticAgentPolicy:
+    name: Elastic Agent on ECK policy
+    id: eck-agent
+    isManaged: true
+    monitoringEnabled:
+      - logs
+      - metrics
+    unenrollTimeout: 900
+    isDefault: true
+    packagePolicies:
+      - name: system-1
+        id: system-1
+        package:
+          name: system
+      - name: kubernetes-1
+        id: kubernetes-1
+        package:
+          name: kubernetes

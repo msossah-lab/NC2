@@ -1,0 +1,4 @@
+# macOS Finder metadata
+.DS_Store
+
+# NOTE: `packages/` artifacts are intentionally committed for Helm/Rancher repository consumption.

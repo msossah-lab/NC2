@@ -1,0 +1,59 @@
+{{- if .Values.fleet.enabled }}
+apiVersion: agent.k8s.elastic.co/v1alpha1
+kind: Agent
+metadata:
+  name: {{ include "kibana.fullname" . }}-fleet-server
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kibana.labels" . | nindent 4 }}
+spec:
+  version: {{ .Values.fleet.agentImage.tag | quote }}
+  image: "{{ .Values.fleet.agentImage.repository }}:{{ .Values.fleet.agentImage.tag }}"
+  kibanaRef:
+    name: {{ include "kibana.fullname" . }}
+  elasticsearchRefs:
+    - name: {{ .Values.kibana.elasticsearchRefName }}
+  mode: fleet
+  fleetServerEnabled: true
+  policyID: {{ .Values.fleet.fleetServer.policyId }}
+  deployment:
+    replicas: {{ .Values.fleet.fleetServer.replicaCount }}
+    podTemplate:
+      metadata:
+        labels:
+          {{- include "kibana.labels" . | nindent 10 }}
+      spec:
+        serviceAccountName: {{ include "kibana.fullname" . }}-elastic-agent
+        automountServiceAccountToken: true
+        securityContext:
+          {{- toYaml .Values.fleet.fleetServer.securityContext | nindent 10 }}
+---
+apiVersion: agent.k8s.elastic.co/v1alpha1
+kind: Agent
+metadata:
+  name: {{ include "kibana.fullname" . }}-elastic-agent
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kibana.labels" . | nindent 4 }}
+spec:
+  version: {{ .Values.fleet.agentImage.tag | quote }}
+  image: "{{ .Values.fleet.agentImage.repository }}:{{ .Values.fleet.agentImage.tag }}"
+  kibanaRef:
+    name: {{ include "kibana.fullname" . }}
+  fleetServerRef:
+    name: {{ include "kibana.fullname" . }}-fleet-server
+  mode: fleet
+  policyID: {{ .Values.fleet.elasticAgent.policyId }}
+  daemonSet:
+    podTemplate:
+      metadata:
+        labels:
+          {{- include "kibana.labels" . | nindent 10 }}
+      spec:
+        serviceAccountName: {{ include "kibana.fullname" . }}-elastic-agent
+        automountServiceAccountToken: true
+        securityContext:
+          {{- toYaml .Values.fleet.elasticAgent.securityContext | nindent 10 }}
+        volumes:
+          {{- toYaml .Values.fleet.elasticAgent.volumes | nindent 10 }}
+{{- end }}

@@ -1,0 +1,111 @@
+# -- Override the chart name.
+nameOverride: ""
+# -- Override the full resource name.
+fullnameOverride: ""
+
+image:
+  # -- Elasticsearch container image repository used by ECK.
+  repository: docker.elastic.co/elasticsearch/elasticsearch
+  # -- Elasticsearch version and image tag.
+  tag: "9.3.2"
+
+service:
+  # -- Service type for the Elasticsearch HTTP endpoint.
+  type: ClusterIP
+  # -- Service port exposed by the Elasticsearch HTTP endpoint.
+  port: 9200
+  # -- Target port exposed by the Elasticsearch container.
+  targetPort: 9200
+  # -- Service protocol for the Elasticsearch HTTP endpoint.
+  protocol: TCP
+  # -- Named service port.
+  name: https
+
+monitoring:
+  # -- External monitoring cluster reference for metrics.
+  metricsRef:
+    name: monitoring-cluster
+    namespace: observability
+  # -- External monitoring cluster reference for logs.
+  logsRef:
+    name: monitoring-cluster
+    namespace: observability
+
+# -- Extra environment variables added to all Elasticsearch node containers.
+env: []
+
+nodeSets:
+  # -- Master node set used for cluster coordination.
+  - name: master
+    count: 1
+    config:
+      node.roles:
+        - master
+        - voting_only
+      xpack.ml.enabled: true
+      node.store.allow_mmap: false
+    volumeClaimTemplates:
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 50Gi
+          storageClassName: disk-hot
+    podLabels:
+      key: prod
+    resources:
+      requests:
+        memory: 1Gi
+        cpu: "1"
+      limits:
+        memory: 1Gi
+        cpu: "1"
+    securityContext:
+      runAsUser: 1001
+      runAsGroup: 1001
+
+  # -- Hot data node set for indexing and query workloads.
+  - name: data-hot
+    count: 2
+    config:
+      node.roles:
+        - data_hot
+        - master
+        - ingest
+        - data_content
+        - remote_cluster_client
+      node.store.allow_mmap: false
+    volumeClaimTemplates:
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 550Gi
+          storageClassName: disk-hot
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 550Gi
+          storageClassName: disk-hot
+    podLabels:
+      key: prod
+    resources:
+      requests:
+        memory: 8Gi
+        cpu: "2"
+      limits:
+        memory: 8Gi
+        cpu: "2"
+    securityContext:
+      runAsUser: 1001
+      runAsGroup: 1001

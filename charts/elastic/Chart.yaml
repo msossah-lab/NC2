@@ -1,0 +1,6 @@
+apiVersion: v2
+name: elastic
+description: ECK Elasticsearch cluster chart for NC2 environments.
+type: application
+version: 0.1.0
+appVersion: "9.3.2"

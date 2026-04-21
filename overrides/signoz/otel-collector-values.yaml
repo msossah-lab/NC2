@@ -1,0 +1,37 @@
+# Deploy only the in-cluster OpenTelemetry collector pieces.
+otelCollector:
+  enabled: true
+
+otelCollectorMetrics:
+  enabled: true
+
+# Optional preset for labels/tags that identify the environment in SigNoz.
+global:
+  cloud: OVH
+  clusterName: nc2-ca-bhs5-prod           # Adjust to your cluster name
+  deploymentEnvironment: production  # e.g. "homelab", "staging", "production"
+
+
+# Configure OTLP export to the external SigNoz VM endpoint.
+otelExporterEndpoint: "http://SIGNOZ_VM_IP:4317"
+
+# Enable common Kubernetes metric collection behavior.
+presets:
+  logsCollection:
+    enabled: true
+  kubeletMetrics:
+    enabled: true
+  kubernetesAttributes:
+    enabled: true
+  clusterMetrics:
+    enabled: true
+
+# Keep core SigNoz platform components disabled (they run on VM).
+clickhouse:
+  enabled: false
+queryService:
+  enabled: false
+frontend:
+  enabled: false
+alertmanager:
+  enabled: false

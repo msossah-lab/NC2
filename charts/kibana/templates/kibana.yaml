@@ -1,0 +1,64 @@
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: {{ include "kibana.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kibana.labels" . | nindent 4 }}
+spec:
+  version: {{ .Values.kibana.image.tag | quote }}
+  image: "{{ .Values.kibana.image.repository }}:{{ .Values.kibana.image.tag }}"
+  http:
+    service:
+      spec:
+        type: {{ .Values.kibana.service.type }}
+        ports:
+          - name: {{ .Values.kibana.service.name }}
+            port: {{ .Values.kibana.service.port }}
+            targetPort: {{ .Values.kibana.service.targetPort }}
+            protocol: {{ .Values.kibana.service.protocol }}
+  count: {{ .Values.kibana.replicaCount }}
+  elasticsearchRef:
+    name: {{ .Values.kibana.elasticsearchRefName }}
+  config:
+    elasticsearch.ssl.verificationMode: {{ .Values.config.elasticsearchSslVerificationMode }}
+    xpack.fleet.agents.elasticsearch.hosts:
+      - "https://{{ .Values.kibana.elasticsearchRefName }}-es-http.{{ .Release.Namespace }}.svc:9200"
+    xpack.fleet.agents.fleet_server.hosts:
+      - "https://{{ include "kibana.fullname" . }}-fleet-server-agent-http.{{ .Release.Namespace }}.svc:8220"
+    xpack.fleet.packages:
+      {{- toYaml .Values.config.fleetPackages | nindent 6 }}
+    xpack.fleet.agentPolicies:
+      - name: {{ .Values.config.fleetServerPolicy.name }}
+        id: {{ .Values.config.fleetServerPolicy.id }}
+        namespace: {{ .Release.Namespace }}
+        is_managed: {{ .Values.config.fleetServerPolicy.isManaged }}
+        monitoring_enabled:
+          {{- toYaml .Values.config.fleetServerPolicy.monitoringEnabled | nindent 10 }}
+        unenroll_timeout: {{ .Values.config.fleetServerPolicy.unenrollTimeout }}
+        is_default_fleet_server: {{ .Values.config.fleetServerPolicy.isDefaultFleetServer }}
+        package_policies:
+          {{- toYaml .Values.config.fleetServerPolicy.packagePolicies | nindent 10 }}
+      - name: {{ .Values.config.elasticAgentPolicy.name }}
+        id: {{ .Values.config.elasticAgentPolicy.id }}
+        namespace: {{ .Release.Namespace }}
+        is_managed: {{ .Values.config.elasticAgentPolicy.isManaged }}
+        monitoring_enabled:
+          {{- toYaml .Values.config.elasticAgentPolicy.monitoringEnabled | nindent 10 }}
+        unenroll_timeout: {{ .Values.config.elasticAgentPolicy.unenrollTimeout }}
+        is_default: {{ .Values.config.elasticAgentPolicy.isDefault }}
+        package_policies:
+          {{- toYaml .Values.config.elasticAgentPolicy.packagePolicies | nindent 10 }}
+  podTemplate:
+    metadata:
+      labels:
+        {{- include "kibana.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: kibana
+          resources:
+            {{- toYaml .Values.kibana.resources | nindent 12 }}
+          {{- with .Values.kibana.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

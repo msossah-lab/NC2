@@ -1,0 +1,55 @@
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: {{ include "elastic.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "elastic.labels" . | nindent 4 }}
+spec:
+  version: {{ .Values.image.tag | quote }}
+  image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+  monitoring:
+    metrics:
+      elasticsearchRefs:
+        - name: {{ .Values.monitoring.metricsRef.name }}
+          namespace: {{ .Values.monitoring.metricsRef.namespace }}
+    logs:
+      elasticsearchRefs:
+        - name: {{ .Values.monitoring.logsRef.name }}
+          namespace: {{ .Values.monitoring.logsRef.namespace }}
+  http:
+    service:
+      spec:
+        type: {{ .Values.service.type }}
+        ports:
+          - name: {{ .Values.service.name }}
+            port: {{ .Values.service.port }}
+            targetPort: {{ .Values.service.targetPort }}
+            protocol: {{ .Values.service.protocol }}
+  nodeSets:
+    {{- range .Values.nodeSets }}
+    - name: {{ .name }}
+      count: {{ .count }}
+      config:
+        {{- toYaml .config | nindent 8 }}
+      volumeClaimTemplates:
+        {{- toYaml .volumeClaimTemplates | nindent 8 }}
+      podTemplate:
+        metadata:
+          labels:
+            {{- include "elastic.labels" $ | nindent 12 }}
+            {{- with .podLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+        spec:
+          containers:
+            - name: elasticsearch
+              securityContext:
+                {{- toYaml .securityContext | nindent 16 }}
+              resources:
+                {{- toYaml .resources | nindent 16 }}
+              {{- with $.Values.env }}
+              env:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+    {{- end }}
