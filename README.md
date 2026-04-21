@@ -80,6 +80,6 @@ For the external SigNoz VM + in-cluster collector deployment model, follow:
    - `helm package charts/kibana -d packages/`
    - `helm package charts/elastic -d packages/`
 5. Rebuild index:
-   - `helm repo index packages/`
+   - Git-mode Rancher compatible: `helm repo index packages/ --url packages`
    - Optional for HTTP-hosted repo mode: `helm repo index packages/ --url <public-packages-base-url>`
 6. Commit and push changes, including updated files in `packages/`
